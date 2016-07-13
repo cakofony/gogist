@@ -41,13 +41,13 @@ func readInput() string {
 	return buf.String()
 }
 
-func createGist(configuration Configuration) (string, error) {
+func createGist(configuration Configuration, filename string, content string) (string, error) {
 	gist := Gist{
 		// Description: "Gist",
 		Public: false,
 		Files: map[string]GistContent{
-			"file": GistContent{
-				Content: readInput(),
+			filename: GistContent{
+				Content: content,
 			},
 		},
 	}
@@ -122,7 +122,9 @@ func main() {
 		log.Fatal(err)
 		return
 	}
-	createdGistUrl, creationError := createGist(configuration)
+	filename := "file"
+	content := readInput()
+	createdGistUrl, creationError := createGist(configuration, filename, content)
 	if creationError != nil {
 		log.Fatal(creationError)
 	}
