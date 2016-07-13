@@ -41,7 +41,7 @@ func readInput() string {
 	return buf.String()
 }
 
-func createGist(configuration Configuration) {
+func createGist(configuration Configuration) (string, error) {
 	gist := Gist{
 		// Description: "Gist",
 		Public: false,
@@ -51,28 +51,31 @@ func createGist(configuration Configuration) {
 			},
 		},
 	}
-	gistBytes, _ := json.Marshal(gist)
+	gistBytes, jsonMarhsalError := json.Marshal(gist)
+	if jsonMarhsalError != nil {
+		return "", jsonMarhsalError
+	}
 
 	request, requestError := http.NewRequest(
 		"POST",
 		configuration.ApiUrl+"/gists",
 		bytes.NewBuffer(gistBytes))
 	if requestError != nil {
-		log.Fatal(requestError)
+		return "", requestError
 	}
 	request.SetBasicAuth(configuration.User, configuration.Key)
 	client := &http.Client{}
 	response, err := client.Do(request)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	} else {
 		defer response.Body.Close()
 		var structuredResponse GistCreationResponse
 		decoderErr := json.NewDecoder(response.Body).Decode(&structuredResponse)
 		if decoderErr != nil {
-			log.Fatal(decoderErr)
+			return "", decoderErr
 		}
-		fmt.Printf("%s\n", structuredResponse.HtmlUrl)
+		return structuredResponse.HtmlUrl, nil
 	}
 }
 
@@ -82,7 +85,7 @@ func readConfigurationFile() (Configuration, error) {
 	defaultApiUrl := "https://api.github.com"
 	configurationPath := os.Getenv("HOME") + "/.gistrc"
 	if _, err := os.Stat(configurationPath); os.IsNotExist(err) {
-		log.Fatal(
+		return configuration, errors.New(
 			"Unable to find ~/.gistrc, please create one following the form:\n" +
 				"{\n\t\"key\": \"yourApiKey\",\n" +
 				"\t\"user\": \"yourUsername\", # Default: current user\n" +
@@ -119,5 +122,9 @@ func main() {
 		log.Fatal(err)
 		return
 	}
-	createGist(configuration)
+	createdGistUrl, creationError := createGist(configuration)
+	if creationError != nil {
+		log.Fatal(creationError)
+	}
+	fmt.Printf("%s\n", createdGistUrl)
 }
