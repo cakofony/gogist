@@ -58,7 +58,7 @@ func createGist(configuration Configuration, filename string, content string) (s
 
 	request, requestError := http.NewRequest(
 		"POST",
-		configuration.ApiUrl+"/gists",
+		configuration.ApiUrl + "/gists",
 		bytes.NewBuffer(gistBytes))
 	if requestError != nil {
 		return "", requestError
