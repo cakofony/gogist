@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"path"
 )
 
 // Configuration for this application
@@ -117,13 +119,27 @@ func readConfigurationFile() (Configuration, error) {
 }
 
 func main() {
+	file := flag.String("f", "", "File to upload to gist")
+	flag.Parse();
 	configuration, err := readConfigurationFile()
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
-	filename := "file"
-	content := readInput()
+	var filename string
+	var content string
+	if *file == "" {
+		filename = "file"
+		content = readInput()
+	} else {
+		_, filename = path.Split(*file)
+		file, err := ioutil.ReadFile(*file)
+		if err != nil {
+			log.Fatal(err)
+		}
+		content = string(file)
+	}
+
 	createdGistUrl, creationError := createGist(configuration, filename, content)
 	if creationError != nil {
 		log.Fatal(creationError)
