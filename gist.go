@@ -120,6 +120,7 @@ func readConfigurationFile() (Configuration, error) {
 
 func main() {
 	file := flag.String("f", "", "File to upload to gist")
+	filenameOverride := flag.String("n", "", "Filename to use for the created gist")
 	flag.Parse();
 	configuration, err := readConfigurationFile()
 	if err != nil {
@@ -138,6 +139,11 @@ func main() {
 			log.Fatal(err)
 		}
 		content = string(file)
+	}
+
+	// If an override has been specified, apply it to the gist
+	if *filenameOverride != "" {
+		filename = *filenameOverride
 	}
 
 	createdGistUrl, creationError := createGist(configuration, filename, content)
